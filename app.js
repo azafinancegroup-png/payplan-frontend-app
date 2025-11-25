@@ -20,7 +20,7 @@ document.getElementById('evaluation-form').addEventListener('submit', async func
     };
 
     // MERK: Når backend er deployert, må denne URL-en endres!
-    const API_ENDPOINT = 'https://payplan-frontend-app.onrender.com/api/evaluate_case';
+    const API_ENDPOINT = 'https://payplan-frontend-app.onrender.com/api/evaluate_case';    
     const resultsDiv = document.getElementById('results');
     const flagsDiv = document.getElementById('risk-flags');
     const suggestionsList = document.getElementById('suggestions-list');
