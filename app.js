@@ -3,7 +3,7 @@ document.getElementById('evaluation-form').addEventListener('submit', async func
     e.preventDefault();
     
     const form = e.target;
-    // Collect data from the form
+    // Hent data fra skjemaet (Collect data from the form)
     const data = {
         kunde_ID: form.kunde_ID.value,
         laanetype_ønsket: form.laanetype_ønsket.value,
@@ -13,13 +13,13 @@ document.getElementById('evaluation-form').addEventListener('submit', async func
         bolig_verdi: parseFloat(form.bolig_verdi.value),
         husholdning_størrelse: parseInt(form.husholdning_størrelse.value),
         
-        // Hidden/Default values 
+        // Skjulte/Standardverdier for V3.0 analyse (Hidden/Default values for V3.0 analysis)
         utgifter: parseFloat(form.utgifter.value), 
         inntekt_mnd: parseInt(form.inntekt_mnd.value),
         anmerkning: form.anmerkning.value === 'True',
     };
 
-    // NOTE: Jab aapka Backend deploy ho jaye, toh yeh URL badalna hoga!
+    // MERK: Når backend er deployert, må denne URL-en endres!
     const API_ENDPOINT = 'http://localhost:5000/api/evaluate_case'; 
 
     const resultsDiv = document.getElementById('results');
@@ -31,8 +31,8 @@ document.getElementById('evaluation-form').addEventListener('submit', async func
     resultsDiv.style.display = 'block';
 
     try {
-        // --- SIMULATED RESPONSE for Netlify Deployment ---
-        // Hum abhi nakli nateeja dikha rahe hain taake aapka Netlify form kaam karta hua dikhe.
+        // --- SIMULERT RESPONDS FOR NETLIFY DEPLOYERING ---
+        // (Vi viser et falskt resultat nå for å bekrefte at frontend fungerer)
         const simulatedResponse = {
             success: true,
             risk_flags: [
@@ -62,6 +62,6 @@ document.getElementById('evaluation-form').addEventListener('submit', async func
         }
 
     } catch (error) {
-        flagsDiv.innerHTML = `<p class="error">Nettverksfeil: Kunne ikke koble til API. Abhi aapka backend deploy nahi hua hai.</p>`;
+        flagsDiv.innerHTML = `<p class="error">Nettverksfeil: Klarte ikke koble til API. Backend er ikke deployert enda.</p>`;
     }
 });
