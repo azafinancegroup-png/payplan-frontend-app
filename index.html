@@ -57,6 +57,11 @@
             font-weight: 900;
         }
 
+        /* Bank Match Grid */
+        .bank-match-container {
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        }
+
         /* Loading Spinner */
         .spinner {
             border: 4px solid #f3f3f3;
@@ -71,6 +76,33 @@
             100% { transform: rotate(360deg); }
         }
 
+        /* Input styling for bedre utseende */
+        .input-group label {
+            font-weight: 600;
+            color: #374151;
+            font-size: 0.875rem;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .input-group input[type="text"],
+        .input-group input[type="number"],
+        .input-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .input-group input:focus,
+        .input-group select:focus {
+            border-color: var(--light-blue);
+            box-shadow: 0 0 0 2px rgba(0, 80, 158, 0.2);
+            outline: none;
+        }
+
     </style>
     <script>
         // --- Globale konstanter og verktøyfunksjoner ---
@@ -80,16 +112,26 @@
         const MAX_LTV = 0.85;       // Maksimal LTV (85%)
         const RENTETEST_BUFFER = 0.05; // 5% renteøkning buffer
 
-        // Bankkategorier for simulert matching
+        // OPPDATERT: Utvidet Bankliste med simulerte kriterier for Matching
         const BANK_PROFILES = [
-            // Ordinære banker (foretrekkes for sterke profiler)
-            { navn: "DNB Bank", type: "Ordinær Bank", min_score: 90, maks_gjeldsgrad: 5.0, maks_ltv: 0.85, tillater_inkasso: false, sjanse_faktor: 0.95 },
-            { navn: "Nordea", type: "Ordinær Bank", min_score: 85, maks_gjeldsgrad: 4.8, maks_ltv: 0.85, tillater_inkasso: false, sjanse_faktor: 0.90 },
-            { navn: "SpareBank 1 (Alliansen)", type: "Ordinær Bank", min_score: 80, maks_gjeldsgrad: 5.0, maks_ltv: 0.85, tillater_inkasso: false, sjanse_faktor: 0.88 },
-            // Spesialbanker (alternative långivere, for mer komplekse profiler)
-            { navn: "Kraft Bank", type: "Spesialbank (Refinansiering)", min_score: 50, maks_gjeldsgrad: 8.0, maks_ltv: 1.00, tillater_inkasso: true, sjanse_faktor: 0.75 },
-            { navn: "Nordax Bank", type: "Spesialbank", min_score: 60, maks_gjeldsgrad: 7.0, maks_ltv: 0.95, tillater_inkasso: false, sjanse_faktor: 0.70 },
-            { navn: "Bank2", type: "Spesialbank (Uføre/Pensjon)", min_score: 70, maks_gjeldsgrad: 5.5, maks_ltv: 0.90, tillater_inkasso: false, sjanse_faktor: 0.80 },
+            // Ordinære banker (foretrekkes for sterke profiler, strenge krav)
+            { navn: "DNB Bank", type: "Ordinær", score_min: 85, inkasso: false, gjeldsgrad_max: 5.0, ltv_max: 0.85, sjanse_faktor: 1.00 },
+            { navn: "Nordea", type: "Ordinær", score_min: 80, inkasso: false, gjeldsgrad_max: 4.8, ltv_max: 0.85, sjanse_faktor: 0.95 },
+            { navn: "Danske Bank", type: "Ordinær", score_min: 75, inkasso: false, gjeldsgrad_max: 4.9, ltv_max: 0.80, sjanse_faktor: 0.90 },
+            { navn: "Handelsbanken", type: "Ordinær", score_min: 70, inkasso: false, gjeldsgrad_max: 5.0, ltv_max: 0.85, sjanse_faktor: 0.88 },
+            { navn: "Sbanken", type: "Ordinær", score_min: 80, inkasso: false, gjeldsgrad_max: 4.7, ltv_max: 0.85, sjanse_faktor: 0.92 },
+            { navn: "SpareBank 1 (Østlandet)", type: "Ordinær (Regional)", score_min: 70, inkasso: false, gjeldsgrad_max: 5.0, ltv_max: 0.85, sjanse_faktor: 0.85 },
+            { navn: "Sparebanken Vest", type: "Ordinær (Regional)", score_min: 70, inkasso: false, gjeldsgrad_max: 5.0, ltv_max: 0.85, sjanse_faktor: 0.85 },
+            { navn: "BN Bank", type: "Ordinær", score_min: 75, inkasso: false, gjeldsgrad_max: 4.8, ltv_max: 0.85, sjanse_faktor: 0.90 },
+            { navn: "KLP Banken", type: "Ordinær (Medlem)", score_min: 80, inkasso: false, gjeldsgrad_max: 5.0, ltv_max: 0.85, sjanse_faktor: 0.95 },
+            
+            // Spesialbanker/Forbruksbanker (mer fleksible/høyere risiko/andre formål)
+            { navn: "Santander Consumer Bank", type: "Spesial/Forbruk", score_min: 60, inkasso: false, gjeldsgrad_max: 5.5, ltv_max: 0.90, sjanse_faktor: 0.75 },
+            { navn: "Bank Norwegian", type: "Spesial/Forbruk", score_min: 65, inkasso: false, gjeldsgrad_max: 5.5, ltv_max: 0.90, sjanse_faktor: 0.70 },
+            { navn: "Komplett Bank", type: "Spesial/Forbruk", score_min: 55, inkasso: false, gjeldsgrad_max: 6.0, ltv_max: 0.95, sjanse_faktor: 0.65 },
+            { navn: "Nordax Bank", type: "Spesial/Refinans", score_min: 40, inkasso: false, gjeldsgrad_max: 7.0, ltv_max: 1.00, sjanse_faktor: 0.80 },
+            { navn: "Bank2", type: "Spesial/Refinans", score_min: 50, inkasso: false, gjeldsgrad_max: 5.5, ltv_max: 0.90, sjanse_faktor: 0.78 },
+            { navn: "Kraft Bank", type: "Spesial/Inkasso", score_min: 30, inkasso: true, gjeldsgrad_max: 8.0, ltv_max: 1.00, sjanse_faktor: 0.90 },
         ];
 
 
@@ -158,7 +200,7 @@
 
             // Medsøker (Henter kun hvis checkbox er huket av)
             let total_inntekt = inntekt_soker;
-            let total_gjeld = kredittkort_ramme_soker * 0.4 // Kredittkortramme multipliseres med 40% (Utlånsforskriften)
+            let total_gjeld = (kredittkort_ramme_soker * 0.4) // Kredittkortramme multipliseres med 40% (Utlånsforskriften)
                             + forbrukslan_soker
                             + billan_soker
                             + studielan_soker;
@@ -190,10 +232,11 @@
             const egenkapital_kilde = hentVerdi('egenkapital_kilde', false);
 
             const har_inkasso_totalt = har_inkasso_soker || har_inkasso_medsoker;
+            const lan_med_gjeld = onsket_lan + total_gjeld; // Total lån/gjeld ekskl. boliglån
 
             // --- 2. Hovedberegninger (Utlånsforskriften) ---
 
-            const total_lan_pluss_gjeld = onsket_lan + total_gjeld;
+            const total_lan_pluss_gjeld = lan_med_gjeld;
             
             // Gjeldsgrad (Debt-to-Income)
             const gjeldsgrad = total_inntekt > 0 ? (total_lan_pluss_gjeld / total_inntekt) : Infinity;
@@ -201,16 +244,15 @@
             // LTV (Loan-to-Value)
             const ltv = boligverdi > 0 ? (onsket_lan / boligverdi) : Infinity;
             
-            // Rentetest (Simulerer 5% renteøkning på ønsket lån og total gjeld)
-            // Dette er en forenklet simulering for analyse, da rentetest vanligvis ser på betjeningsevne med 5% renteøkning på *eksisterende* rente.
-            const rentetest_gjeld = total_lan_pluss_gjeld; // Bruker hele gjeldsmassen for enkelthet
+            // Rentetest (Simulerer 5% renteøkning på total lån/gjeld)
+            const rentetest_gjeld = total_lan_pluss_gjeld;
             const rentetest_okt_belastning = rentetest_gjeld * RENTETEST_BUFFER; 
-            const inntekt_mot_belastning = total_inntekt * 0.2; // 20% av inntekten brukes som en forenklet 'betjeningsevne'-grense
+            const inntekt_mot_belastning = total_inntekt * 0.2; // Forenklet betjeningsevne sjekk (20% av inntekt)
 
             // --- 3. Generer Risiko Flagg og Løsningsforslag ---
             let flags = [];
             let suggestions = [];
-            let match_score_base = 100;
+            let initial_score = 100;
 
             // Flagg: Gjeldsgrad
             if (gjeldsgrad > MAX_GJELDSGRAD) {
@@ -220,10 +262,10 @@
                 const reduksjon_nødvendig = total_lan_pluss_gjeld - mål_gjeld;
 
                 suggestions.push(`[Gjeldsgrad] Reduser total lån/gjeld med ${formatterTall(reduksjon_nødvendig)} kr for å møte lovkravet. (Mål: ${formatterTall(mål_gjeld)} kr total gjeld)`);
-                match_score_base -= 30; // Stort trekk
+                initial_score -= 30; 
             } else if (gjeldsgrad > 4.5) {
                  flags.push(`Høy gjeldsgrad (${gjeldsgrad.toFixed(2)}x) – nær maksimalgrensen på ${MAX_GJELDSGRAD.toFixed(1)}x inntekt.`);
-                 match_score_base -= 15;
+                 initial_score -= 15;
             }
 
 
@@ -234,71 +276,109 @@
                 const mål_lan = boligverdi * MAX_LTV;
                 const ekstra_egenkapital = onsket_lan - mål_lan;
 
-                suggestions.push(`[LTV] Kunden må stille med ekstra egenkapital på ${formatterTall(ekstra_egenkapital)} kr. for å komme under ${MAX_LTV * 100}%.`);
-                match_score_base -= 25; // Stort trekk
+                suggestions.push(`[LTV] Kunden må stille med ekstra egenkapital på ${formatterTall(ekstra_egenkapital)} kr for å komme under ${MAX_LTV * 100}%.`);
+                initial_score -= 25; 
             } else if (boligverdi > 0 && ltv > 0.8) {
                 flags.push(`Høy LTV (${(ltv * 100).toFixed(2)}%) – nær grensen på 85%. Noen banker kan kreve strengere vurdering.`);
-                match_score_base -= 10;
+                initial_score -= 10;
             }
 
             // Flagg: Rentetest (Forenklet sjekk)
             if (rentetest_okt_belastning > inntekt_mot_belastning) {
-                flags.push(`Rentetest feilet (Forenklet): Økt rentebelastning (${formatterTall(rentetest_okt_belastning)} kr) overstiger ${formatterTall(inntekt_mot_belastning)} kr (20% av inntekt).`);
+                flags.push(`Rentetest feilet (Forenklet): Økt rentebelastning (${formatterTall(rentetest_okt_belastning)} kr/år) overstiger betjeningsevne (20% av inntekt).`);
                 suggestions.push(`[Rentetest] Reduser total lånebeløp for å sikre betjeningsevnen ved en renteøkning på 5 prosentpoeng.`);
-                match_score_base -= 15;
+                initial_score -= 15;
             }
 
             // Flagg: Øvrige krav
             if (antall_barn_under_18 > 0) {
-                flags.push(`Antall barn under 18 år (${antall_barn_under_18}) – Påvirker bankens kostnadsberegning og betjeningsevnevurdering.`);
-                match_score_base -= (antall_barn_under_18 * 3);
+                flags.push(`Antall barn under 18 år (${antall_barn_under_18}) – Påvirker bankens kostnadsberegning (Sifo-satser).`);
+                initial_score -= (antall_barn_under_18 * 3);
             }
             if (har_inkasso_totalt) {
-                flags.push(`Aktiv inkassosak / betalingsanmerkning funnet – Umuliggjør søknad hos ordinære banker. Spesialbank er påkrevd.`);
-                suggestions.push(`[Inkasso] Refinansiering hos en spesialbank (som tillater inkasso) er eneste løsning. Saken MÅ være løst/innbakt.`);
-                match_score_base = 30; // Reduserer score drastisk, tvinger til spesialbank
+                flags.push(`Aktiv inkassosak / betalingsanmerkning funnet – Umuliggjør søknad hos ordinære banker.`);
+                suggestions.push(`[Inkasso] Refinansiering hos en spesialbank (som tillater inkasso) er nødvendig for å løse anmerkningen.`);
+                initial_score = 30; // Reduserer score drastisk for ordinære banker
             }
             if (arbeidsforhold_soker === 'Selvstendig næringsdrivende') {
-                 flags.push(`Selvstendig næringsdrivende – Krever 3 års dokumentasjon. Bankene krever strengere dokumentasjon/buffer.`);
-                 match_score_base -= 10;
+                 flags.push(`Selvstendig næringsdrivende – Krever 3 års dokumentasjon av inntekt. Bankene krever strengere dokumentasjon/buffer.`);
+                 initial_score -= 10;
             }
             if (inkasso_bank_historikk && inkasso_bank_historikk.length > 0) {
                 flags.push(`Bankhistorikk: Kunden har søkt/fått avslag hos: ${inkasso_bank_historikk}. Kan indikere tidligere utfordringer.`);
+                initial_score -= 5;
+            }
+            if (egenkapital_kilde && egenkapital_kilde.toLowerCase().includes('lån')) {
+                flags.push(`Egenkapital delvis finansiert av lån - Krever strengere vurdering av banken.`);
+                initial_score -= 5;
             }
 
-            // --- 4. Bank Matching og Resultatvisning ---
+            const final_score_base = Math.max(0, Math.min(100, Math.round(initial_score)));
+
+            // --- 4. OPPDATERT Bank Matching og Resultatvisning (ALLE 15 banker) ---
 
             let bank_matches = [];
-            const final_score = Math.max(0, Math.min(100, Math.round(match_score_base)));
+            
+            // Itererer gjennom ALLE bankene i listen
+            BANK_PROFILES.forEach(bank => {
+                let match_prosent = final_score_base;
+                let is_match = true;
 
-            // Smart Bank Matching Logikk
-            if (har_inkasso_totalt) {
-                // Tving til spesialbanker hvis det er inkasso
-                bank_matches.push(BANK_PROFILES.find(b => b.navn === "Kraft Bank"));
-                bank_matches.push(BANK_PROFILES.find(b => b.navn === "Nordax Bank"));
-            } else if (gjeldsgrad > 5.0 || ltv > 0.90) {
-                // Høy risiko, men uten inkasso, kan prøve én Spesialbank og én Ordinær
-                bank_matches.push(BANK_PROFILES.find(b => b.navn === "Bank2"));
-                bank_matches.push(BANK_PROFILES.find(b => b.navn === "SpareBank 1 (Alliansen)"));
-            } else {
-                // God profil, anbefal Ordinære Banker
-                bank_matches.push(BANK_PROFILES.find(b => b.navn === "DNB Bank"));
-                bank_matches.push(BANK_PROFILES.find(b => b.navn === "Nordea"));
-                bank_matches.push(BANK_PROFILES.find(b => b.navn === "SpareBank 1 (Alliansen)"));
-            }
+                // Sjekk 1: Inkasso Policy
+                if (har_inkasso_totalt && !bank.inkasso) {
+                    match_prosent = 0; // Ordinære banker matcher 0% ved inkasso
+                    is_match = false;
+                } 
+                
+                // Sjekk 2: Gjeldsgrad Policy
+                if (gjeldsgrad > bank.gjeldsgrad_max) {
+                    match_prosent -= 30; // Betydelig trekk hvis man er over bankens grense
+                    if (gjeldsgrad > bank.gjeldsgrad_max + 1) match_prosent = 0;
+                }
 
-            // Filtrer bort null (hvis bank ikke ble funnet)
-            bank_matches = bank_matches.filter(b => b);
+                // Sjekk 3: LTV Policy
+                if (ltv > bank.ltv_max) {
+                    match_prosent -= 20; // Trekk hvis man er over bankens LTV grense
+                    if (ltv > bank.ltv_max + 0.1) match_prosent = 0;
+                }
+                
+                // Sjekk 4: Generell Risikofaktor / Bankens Kredittscorekrav (score_min)
+                // Juster match basert på bankens type og base score
+                if (match_prosent < bank.score_min) {
+                    match_prosent = Math.floor(match_prosent * 0.5); // Stor reduksjon hvis score er for lav for bankens minimumskrav
+                }
+
+                // Anvend bankens generelle sjansefaktor og sørg for at prosent er innen 0-100
+                match_prosent = Math.max(0, Math.min(100, Math.round(match_prosent * bank.sjanse_faktor)));
+
+                bank_matches.push({
+                    navn: bank.navn,
+                    type: bank.type,
+                    prosent: match_prosent
+                });
+            });
+
+            // Sorter bankene etter høyeste matchprosent
+            bank_matches.sort((a, b) => b.prosent - a.prosent);
 
             let bankMatchHTML = bank_matches.map(bank => {
-                // Justerer matchprosent basert på den individuelle bankens sjansefaktor
-                const matchProsent = Math.min(100, Math.round(final_score * bank.sjanse_faktor));
-                const highChanceClass = matchProsent >= 80 ? 'border-green-600 bg-green-50' : 'border-gray-300 bg-white';
+                const matchProsent = bank.prosent;
+                let chanceColor = 'bg-gray-100 border-gray-300 text-gray-800';
+                if (matchProsent >= 80) {
+                    chanceColor = 'bg-green-50 border-green-600 text-green-700';
+                } else if (matchProsent >= 50) {
+                    chanceColor = 'bg-yellow-50 border-yellow-600 text-yellow-700';
+                } else if (matchProsent > 0) {
+                    chanceColor = 'bg-orange-50 border-orange-600 text-orange-700';
+                } else {
+                    chanceColor = 'bg-red-50 border-red-600 text-red-700 opacity-60';
+                }
+
                 return `
-                    <div class="bank-card p-4 rounded-lg shadow-md border ${highChanceClass} transition-all duration-300">
-                        <h4 class="text-base font-semibold text-[var(--dark-blue)] mb-1">${bank.navn}</h4>
-                        <p class="text-2xl font-bold text-gray-800">${matchProsent}%</p>
-                        <p class="text-xs text-gray-500 mt-1">${bank.type}</p>
+                    <div class="bank-card p-3 rounded-lg shadow-sm border-l-4 ${chanceColor} transition-all duration-300">
+                        <p class="text-xs font-semibold text-gray-500 mb-1">${bank.type}</p>
+                        <h4 class="text-base font-semibold text-[var(--dark-blue)] leading-tight">${bank.navn}</h4>
+                        <p class="text-xl font-bold mt-1">${matchProsent}%</p>
                     </div>
                 `;
             }).join('');
@@ -313,10 +393,22 @@
                         <span class="huge-number">${formatterTall(total_inntekt)} kr</span>
                     </div>
                     <div class="flex-1 p-3 bg-gray-100 rounded-lg shadow-inner">
-                        <span class="text-sm font-semibold text-gray-600 block">Total gjeld (med KK-ramme)</span>
+                        <span class="text-sm font-semibold text-gray-600 block">Total Lån/Gjeld (Inkl. ønske)</span>
                         <span class="huge-number">${formatterTall(total_lan_pluss_gjeld)} kr</span>
                     </div>
                 </div>
+                
+                <div class="flex flex-col sm:flex-row justify-between gap-6 mb-6 mt-4">
+                    <div class="flex-1 p-3 bg-gray-100 rounded-lg shadow-inner">
+                        <span class="text-sm font-semibold text-gray-600 block">Gjeldsgrad (DTI)</span>
+                        <span class="huge-number">${gjeldsgrad.toFixed(2)}x</span>
+                    </div>
+                    <div class="flex-1 p-3 bg-gray-100 rounded-lg shadow-inner">
+                        <span class="text-sm font-semibold text-gray-600 block">LTV (Låne-verdi)</span>
+                        <span class="huge-number">${(ltv * 100).toFixed(2)}%</span>
+                    </div>
+                </div>
+
 
                 <!-- Risiko Flagg -->
                 <h3 class="flag-title text-lg font-bold text-[var(--dark-blue)] border-b border-gray-300 pb-1 mb-3 mt-4">Risiko Flagg funnet:</h3>
@@ -335,8 +427,8 @@
                 </ul>
 
                 <!-- Bank Match -->
-                <h3 class="bank-title text-lg font-bold text-[var(--dark-blue)] border-b border-gray-300 pb-1 mb-4 mt-6">Bank Matching (Sannsynlighet)</h3>
-                <div class="bank-match-container grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <h3 class="bank-title text-lg font-bold text-[var(--dark-blue)] border-b border-gray-300 pb-1 mb-4 mt-6">Bank Matching (Sannsynlighet) - 15 Bankprofiler</h3>
+                <div class="bank-match-container grid gap-4">
                     ${bankMatchHTML}
                 </div>
             `;
@@ -371,7 +463,7 @@
             toggleMedsoker();
 
             // Legger til input-format/clean-up lyttere (for å fjerne mellomrom og tillate format)
-            document.querySelectorAll('input[type="number"], input[name$="_soker"], input[name$="_medsoker"]').forEach(input => {
+            document.querySelectorAll('input[type="text"][id$="_soker"], input[type="text"][id$="_medsoker"], input[type="text"][id="onsket_lan"], input[type="text"][id="boligverdi"], input[type="text"][id="egenkapital"]').forEach(input => {
                 input.addEventListener('input', function() {
                     let rawValue = this.value.replace(/[^0-9]/g, ''); // Fjerner alt unntatt tall
                     if (rawValue) {
@@ -441,7 +533,7 @@
                     <input type="text" id="kredittkort_ramme_soker" name="kredittkort_ramme_soker" placeholder="Eks: 50 000">
                 </div>
                 <div class="input-group">
-                    <label for="forbrukslan_soker">Forbrukslån (Totalt)</label>
+                    <label for="forbrukslan_soker">Forbrukslån (Restgjeld)</label>
                     <input type="text" id="forbrukslan_soker" name="forbrukslan_soker" placeholder="Eks: 120 000">
                 </div>
                 <div class="input-group">
@@ -469,7 +561,7 @@
                 </div>
             </div>
             <div class="input-group mt-4">
-                <label for="inkasso_bank_historikk">Hvilke banker er det søkt/fått avslag hos tidligere?</label>
+                <label for="inkasso_bank_historikk">Hvilke banker er det søkt/fått avslag hos tidligere? (Navn separert med komma)</label>
                 <input type="text" id="inkasso_bank_historikk" name="inkasso_bank_historikk" placeholder="Eks: DNB, Sbanken, SpareBank 1">
             </div>
 
@@ -502,15 +594,15 @@
                         <input type="text" id="kredittkort_ramme_medsoker" name="kredittkort_ramme_medsoker" placeholder="Eks: 30 000">
                     </div>
                     <div class="input-group">
-                        <label for="forbrukslan_medsoker">Forbrukslån</label>
+                        <label for="forbrukslan_medsoker">Forbrukslån (Restgjeld)</label>
                         <input type="text" id="forbrukslan_medsoker" name="forbrukslan_medsoker" placeholder="Eks: 0">
                     </div>
                     <div class="input-group">
-                        <label for="billan_medsoker">Billån/Båt</label>
+                        <label for="billan_medsoker">Billån/Båt (Restgjeld)</label>
                         <input type="text" id="billan_medsoker" name="billan_medsoker" placeholder="Eks: 0">
                     </div>
                     <div class="input-group">
-                        <label for="studielan_medsoker">Studielån</label>
+                        <label for="studielan_medsoker">Studielån (Restgjeld)</label>
                         <input type="text" id="studielan_medsoker" name="studielan_medsoker" placeholder="Eks: 100 000">
                     </div>
                 </div>
