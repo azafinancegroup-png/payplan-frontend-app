@@ -1,25 +1,44 @@
 body {
-    font-family: Arial, sans-serif;
+    font-family: 'Inter', sans-serif;
     background-color: #f4f7f6;
     display: flex;
     justify-content: center;
-    padding: 20px;
+    align-items: flex-start; /* Align to top for better scrolling */
+    padding: 30px 20px;
+    min-height: 100vh;
 }
 
 .container {
     background: #ffffff;
     padding: 30px;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    max-width: 600px;
+    border-radius: 12px;
+    box-shadow: 0 8px 16px rgba(0, 51, 102, 0.15); /* Shadow matching dark blue */
+    max-width: 700px;
     width: 100%;
 }
 
 h1 {
-    color: #007bff;
-    border-bottom: 2px solid #007bff;
-    padding-bottom: 10px;
-    margin-bottom: 20px;
+    color: #003366; /* Dark Blue Primary */
+    border-bottom: 3px solid #003366;
+    padding-bottom: 15px;
+    margin-bottom: 25px;
+    font-size: 24px;
+    font-weight: 700;
+}
+
+h2 {
+    color: #00509e; /* Slightly lighter blue */
+    margin-top: 25px;
+    margin-bottom: 15px;
+    padding: 5px 0;
+    border-bottom: 1px dashed #cccccc;
+    font-size: 1.25rem;
+}
+
+h3 {
+    margin-top: 20px;
+    font-size: 1.15rem;
+    color: #333;
 }
 
 .input-group {
@@ -29,36 +48,125 @@ h1 {
 label {
     display: block;
     margin-bottom: 5px;
-    font-weight: bold;
+    font-weight: 600;
+    color: #333;
+    font-size: 0.95rem;
 }
 
 input[type="text"], input[type="number"], select {
     width: 95%;
-    padding: 10px;
+    padding: 12px;
     border: 1px solid #ccc;
-    border-radius: 4px;
+    border-radius: 6px;
+    transition: border-color 0.3s;
+}
+input[type="text"]:focus, input[type="number"]:focus, select:focus {
+    border-color: #007bff;
+    outline: none;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.2);
 }
 
 .submit-btn {
-    background-color: #28a745;
+    background-color: #003366; /* Dark Blue */
     color: white;
-    padding: 10px 20px;
+    padding: 12px 25px;
     border: none;
-    border-radius: 4px;
+    border-radius: 6px;
     cursor: pointer;
-    font-size: 16px;
-    margin-top: 20px;
+    font-size: 1.1rem;
+    margin-top: 30px;
+    width: 100%;
+    transition: background-color 0.3s;
+}
+.submit-btn:hover {
+    background-color: #00509e;
 }
 
 .results-box {
     margin-top: 30px;
-    padding: 15px;
-    border: 1px solid #007bff;
-    border-radius: 4px;
-    background-color: #e9f7ff;
+    padding: 20px;
+    border: 1px solid #003366;
+    border-radius: 8px;
+    background-color: #f0f8ff; /* Lightest Blue */
 }
 
-.error {
-    color: red;
+/* Risiko Flagg Styling */
+.flag-title, .solution-title, .bank-title {
+    color: #003366;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 5px;
+    margin-bottom: 15px;
+    font-weight: 700;
+}
+
+#risk-flags p {
+    color: #e60000; /* Dark Red error color */
+    font-weight: 600; /* Bold nahi, lekin semi-bold */
+    margin: 5px 0;
+    padding-left: 15px;
+    font-size: 1.02rem; /* Normal se 2% bada */
+}
+
+/* Løsningsforslag Styling */
+#suggestions-list {
+    list-style-type: none;
+    padding-left: 0;
+}
+#suggestions-list li {
+    background-color: #ffffff;
+    border-left: 4px solid #28a745; /* Green solution indicator */
+    padding: 10px;
+    margin-bottom: 8px;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* Bank Match Styling */
+.bank-match-container {
+    margin-top: 15px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 15px;
+}
+.bank-card {
+    background-color: #ffffff;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border: 1px solid #ddd;
+    text-align: center;
+}
+.bank-card h4 {
+    color: #003366;
+    margin-top: 0;
+    margin-bottom: 5px;
+    font-size: 1rem;
+}
+.bank-card p {
+    font-size: 1.5rem;
     font-weight: bold;
+    margin: 0;
+}
+.bank-card.high-chance {
+    border-color: #28a745;
+    background-color: #e9ffed;
+}
+
+/* Loading Spinner */
+.spinner-container {
+    text-align: center;
+    padding: 20px;
+}
+.spinner {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #003366;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 10px;
+}
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
