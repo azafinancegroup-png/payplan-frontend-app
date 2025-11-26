@@ -32,8 +32,8 @@ document.getElementById('evaluation-form').addEventListener('submit', async func
     try {
         // --- SIMULERT RESPONDS FOR NETLIFY DEPLOYERING ---
         // (Vi viser et falskt resultat nå for å bekrefte at frontend fungerer)
-        const simulatedResponse = {
-            success: true,
+        const const response = await fetch(API_ENDPOINT, { ... });
+        success: true,
             risk_flags: [
                 "For høy gjeldsgrad (5.83x) – over 5.0x inntekt",
                 "LTV over 85% (87.50%) – krever egenkapital"
@@ -44,8 +44,8 @@ document.getElementById('evaluation-form').addEventListener('submit', async func
             ]
         };
         
-        const result = simulatedResponse; 
-
+        const result = const result = await response.json();
+        
         if (result.success) {
             flagsDiv.innerHTML = '<h3>Risiko Flagg funnet:</h3>';
             result.risk_flags.forEach(flag => {
