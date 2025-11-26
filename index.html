@@ -3,69 +3,674 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Finans AI Sjekk og CRM</title>
-    <link rel="stylesheet" href="style.css">
+    <!-- Norsk tittel -->
+    <title>PayPlan AI: Saksbehandler V3.0 Proscreening</title>
+    
+    <!-- CSS for mørkeblå tema (Dark Blue Theme) -->
+    <style>
+        /* Typography, Background, and Layout */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f4f7f6;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 30px 20px;
+            min-height: 100vh;
+        }
+        .container {
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0, 51, 102, 0.15); /* Skygge som matcher mørkeblå */
+            max-width: 700px;
+            width: 100%;
+        }
+        h1 {
+            color: #003366; /* Mørkeblå Hovedfarge */
+            border-bottom: 3px solid #003366;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+            font-size: 24px;
+            font-weight: 700;
+        }
+        h2 {
+            color: #00509e;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            padding: 5px 0;
+            border-bottom: 1px dashed #cccccc;
+            font-size: 1.25rem;
+        }
+        h3 {
+            margin-top: 20px;
+            font-size: 1.15rem;
+            color: #333;
+        }
+        /* Form Element Styling */
+        .input-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+            font-size: 0.95rem;
+        }
+        input[type="text"], input[type="number"], select {
+            width: 95%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            transition: border-color 0.3s;
+        }
+        input:focus, select:focus {
+            border-color: #007bff;
+            outline: none;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.2);
+        }
+        .submit-btn {
+            background-color: #003366;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            margin-top: 30px;
+            width: 100%;
+            transition: background-color 0.3s;
+        }
+        .submit-btn:hover {
+            background-color: #00509e;
+        }
+        /* Result Box Styling */
+        .results-box {
+            margin-top: 30px;
+            padding: 20px;
+            border: 1px solid #003366;
+            border-radius: 8px;
+            background-color: #f0f8ff;
+        }
+        .flag-title, .solution-title, .bank-title {
+            color: #003366;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+        /* Spesifikk styling for Risikoflagg */
+        #risk-flags p {
+            color: #e60000; /* Dark Red */
+            font-weight: 400; 
+            margin: 5px 0;
+            padding-left: 15px;
+            font-size: 1.02rem; /* Normal + 2% */
+        }
+        /* Suggestions List Styling */
+        #suggestions-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        #suggestions-list li {
+            background-color: #ffffff;
+            border-left: 4px solid #28a745; /* Grønn for løsning */
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+        /* Bank Match Styling */
+        .bank-match-container {
+            margin-top: 15px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+        }
+        .bank-card {
+            background-color: #ffffff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+        .bank-card h4 {
+            color: #003366;
+            margin-top: 0;
+            margin-bottom: 5px;
+            font-size: 1rem;
+        }
+        .bank-card p {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 0;
+        }
+        .bank-card.high-chance {
+            border-color: #28a745;
+            background-color: #e9ffed;
+        }
+        /* Loading Spinner */
+        .spinner-container {
+            text-align: center;
+            padding: 20px;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #003366;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 <body>
     <div class="container">
         <h1>PayPlan AI: Saksbehandler V3.0</h1>
-        <p>Legg inn kundedata for umiddelbar risikoanalyse og løsningsforslag.</p>
+        <p>Legg inn detaljert kundedata for avansert risikoanalyse og bankmatch.</p>
         
         <form id="evaluation-form">
             
-            <h2>Saksdetaljer</h2>
+            <h2 class="applicant-header">1. Hovedsøker Detaljer</h2>
+            
+            <!-- Hovedsøker: ID, Inntekt, Sysselsetting (Kaam), Barn under 18 -->
             <div class="input-group">
                 <label for="kunde_ID">Kunde ID / Referanse:</label>
                 <input type="text" id="kunde_ID" required value="C001">
             </div>
             
             <div class="input-group">
+                <label for="inntekt_hoved">Årlig Inntekt (kr):</label>
+                <input type="number" id="inntekt_hoved" required value="600000">
+            </div>
+            
+            <div class="input-group">
+                <label for="sysselsetting_hoved">Sysselsetting (Kaam):</label>
+                <select id="sysselsetting_hoved" required>
+                    <option value="Fast">Fast ansatt</option>
+                    <option value="Pensjon">Pensjonist</option>
+                    <option value="Uføretrygd">Uføretrygdet</option>
+                    <option value="Selvstendig">Selvstendig næringsdrivende</option>
+                    <option value="Midlertidig">Midlertidig ansatt</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label for="barn_under_18">Barn under 18 år (antall):</label>
+                <input type="number" id="barn_under_18" min="0" value="1" required>
+            </div>
+
+            <h2 class="applicant-header">2. Medsøker Detaljer (Valgfritt)</h2>
+            <!-- Medsøker: Ja/Nei toggle -->
+            <div class="input-group">
+                <label for="medsoker_ja_nei">Har medsøker?</label>
+                <select id="medsoker_ja_nei">
+                    <option value="Nei">Nei</option>
+                    <option value="Ja">Ja</option>
+                </select>
+            </div>
+            
+            <!-- Medsøker: Inntekt og Sysselsetting (Hidden by default) -->
+            <div id="medsoker-fields" style="display:none;">
+                <div class="input-group">
+                    <label for="inntekt_medsoker">Medsøkers Årlige Inntekt (kr):</label>
+                    <input type="number" id="inntekt_medsoker" value="0">
+                </div>
+                <div class="input-group">
+                    <label for="sysselsetting_medsoker">Medsøkers Sysselsetting:</label>
+                    <select id="sysselsetting_medsoker">
+                        <option value="Fast">Fast ansatt</option>
+                        <option value="Pensjon">Pensjonist</option>
+                        <option value="Uføretrygd">Uføretrygdet</option>
+                        <option value="Selvstendig">Selvstendig næringsdrivende</option>
+                        <option value="Midlertidig">Midlertidig ansatt</option>
+                        <option value="Ingen">Ingen</option>
+                    </select>
+                </div>
+            </div>
+
+            <h2 class="applicant-header">3. Lån, Gjeld og Eiendom</h2>
+            
+            <!-- Lån og Eiendom -->
+            <div class="input-group">
                 <label for="laanetype_ønsket">Ønsket Lånetype:</label>
                 <select id="laanetype_ønsket" required>
                     <option value="Bolig">Bolig</option>
                     <option value="Refinansiering">Refinansiering</option>
-                    <option value="Næring">Næring</option>
                     <option value="Mellomfinansiering">Mellomfinansiering</option>
                 </select>
             </div>
 
-            <h2>Finansiell Data</h2>
-            <div class="input-group">
-                <label for="inntekt">Årlig Inntekt (kr):</label>
-                <input type="number" id="inntekt" required value="600000">
-            </div>
-            <div class="input-group">
-                <label for="total_gjeld">Total Gjeld (kr):</label>
-                <input type="number" id="total_gjeld" required value="3500000">
-            </div>
             <div class="input-group">
                 <label for="laan_oensket">Ønsket Lånebeløp (kr):</label>
                 <input type="number" id="laan_oensket" required value="3500000">
             </div>
+
             <div class="input-group">
                 <label for="bolig_verdi">Boligens Verdivurdering (kr):</label>
                 <input type="number" id="bolig_verdi" required value="4000000">
             </div>
+            
+            <!-- Egenkapital (Self-Financing) -->
             <div class="input-group">
-                <label for="husholdning_størrelse">Husholdning Størrelse (personer):</label>
-                <input type="number" id="husholdning_størrelse" min="1" value="2" required>
+                <label for="egenkapital">Egenkapital (khoud se, kr):</label>
+                <input type="number" id="egenkapital" required value="500000">
             </div>
-            
-            <input type="hidden" id="utgifter" value="0"> 
-            <input type="hidden" id="inntekt_mnd" value="12">
-            <input type="hidden" id="anmerkning" value="False">
-            
-            <button type="submit" class="submit-btn">Kjør Analyse</button>
+
+            <div class="input-group">
+                <label for="egenkapital_kilde">Kilde til Egenkapital (Aya kahan se hai? F.eks. salg, arv, sparing):</label>
+                <input type="text" id="egenkapital_kilde" required value="Sparing">
+            </div>
+
+            <h3 class="debt-header">Gjeldsoversikt</h3>
+            <!-- Gjeld (Bills) -->
+            <div class="input-group">
+                <label for="studielån">Totalt Studielån (kr):</label>
+                <input type="number" id="studielån" value="200000">
+            </div>
+            <div class="input-group">
+                <label for="forbrukslån">Totalt Forbrukslån (kr):</label>
+                <input type="number" id="forbrukslån" value="100000">
+            </div>
+            <div class="input-group">
+                <label for="kredittkort_ramme">Kredittkort Ramme (Totalt ubrukt ramme, kr):</label>
+                <input type="number" id="kredittkort_ramme" value="50000">
+            </div>
+            <div class="input-group">
+                <label for="bil_laan">Billån (kr):</label>
+                <input type="number" id="bil_laan" value="0">
+            </div>
+            <div class="input-group">
+                <label for="bank_sokt">Banker tidligere søkt hos (kommaseparert, f.eks. DNB, Nordea):</label>
+                <input type="text" id="bank_sokt" value="DNB, Nordea">
+            </div>
+
+            <button type="submit" class="submit-btn">Kjør Dyp Analyse</button>
         </form>
 
+        <!-- Analyse Resultat Section -->
         <div id="results" class="results-box" style="display:none;">
-            <h3>Analyse Resultat</h3>
-            <div id="risk-flags"></div>
-            <h3>Løsningsforslag</h3>
-            <ul id="suggestions-list"></ul>
+            <div id="loading-spinner" class="spinner-container">
+                <div class="spinner"></div>
+                <p>Kjører avansert analyse...</p>
+            </div>
+
+            <div id="analysis-content" style="display:none;">
+                <h3 class="flag-title">Risiko Flagg funnet</h3>
+                <div id="risk-flags"></div>
+                
+                <h3 class="solution-title">Løsningsforslag</h3>
+                <ul id="suggestions-list"></ul>
+
+                <h3 class="bank-title">Sannsynlighet for Innvilgelse (Bankmatch)</h3>
+                <div id="bank-chances"></div>
+            </div>
         </div>
     </div>
 
-    <script src="app.js"></script>
+    <!-- START AV ALL JAVASCRIPT LOGIKK -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Viser/skjuler medsøkerfelt basert på valg
+            document.getElementById('medsoker_ja_nei').addEventListener('change', function() {
+                const medsokerFields = document.getElementById('medsoker-fields');
+                if (this.value === 'Ja') {
+                    medsokerFields.style.display = 'block';
+                    document.getElementById('inntekt_medsoker').required = true;
+                } else {
+                    medsokerFields.style.display = 'none';
+                    document.getElementById('inntekt_medsoker').required = false;
+                    document.getElementById('inntekt_medsoker').value = '0'; // Nullstill
+                }
+            });
+
+            // --- NORSK FINANSANALYSE KONFIGURASJON ---
+            const RENTE_OEKNING_STRESS_TEST = 0.03; // 3% renteøkning for stresstest
+            const MAX_GJELD_RATIO = 5.0; // Maksimal gjeldsgrad (5x inntekt)
+            const MAX_LTV = 0.85; // Standard LTV (85%)
+            const MIN_LIVSOPPHOLD_MARGIN = 48000; // Minimum margin etter SIFO og stresstest (4000kr/mnd * 12)
+            
+            // SIFO-kostnader simulert (Årlige satser)
+            const SIFO_AARLIG = { 
+                1: 150000, 
+                2: 250000, 
+                3: 320000, 
+                4: 380000, 
+                5: 430000 
+            }; 
+            const FORBRUKSLÅN_CAP = 400000;
+
+            // Simulerte Bank Policyer
+            const BANK_POLICIES = {
+                // Ordinære Banker (Strengere krav)
+                "DNB (Ordinær Bank)": {
+                    gjeld_max: 4.5, 
+                    ltv_max: 0.80, 
+                    sysselsetting_krav: ["Fast"], 
+                    forbrukslan_toleranse: 50000, 
+                    base_chance: 40
+                },
+                "Nordea (Ordinær Bank)": {
+                    gjeld_max: 4.8, 
+                    ltv_max: 0.85, 
+                    sysselsetting_krav: ["Fast"], 
+                    forbrukslan_toleranse: 100000, 
+                    base_chance: 55
+                },
+                // Digital Bank / Fleksibel
+                "Sbanken (Digital Bank)": {
+                    gjeld_max: 5.0, 
+                    ltv_max: 0.85, 
+                    sysselsetting_krav: ["Fast", "Pensjon", "Uføretrygd"], 
+                    forbrukslan_toleranse: 150000, 
+                    base_chance: 65
+                },
+                // Spesialist Banker (Høyere risikoaksept)
+                "Bluestep (Spesialist Bank)": {
+                    gjeld_max: 5.5, 
+                    ltv_max: 0.90, 
+                    sysselsetting_krav: ["Fast", "Selvstendig", "Midlertidig", "Pensjon", "Uføretrygd"], 
+                    forbrukslan_toleranse: 400000, 
+                    base_chance: 75
+                }
+            };
+
+            // Hjelpefunksjon for å formatere tall til norsk krone format (med mellomrom)
+            const formatNorskKr = (num) => {
+                return num.toLocaleString('no-NO', { 
+                    maximumFractionDigits: 0 
+                });
+            };
+
+            // Klasse for å strukturere løsningsforslag
+            class SolutionSuggestion {
+                constructor(flag_type, description, target_value = null) {
+                    this.flag_type = flag_type;
+                    this.description = description;
+                    this.target_value = target_value;
+                }
+                toString() {
+                    const targetStr = this.target_value !== null 
+                        ? ` (Mål: ${formatNorskKr(this.target_value)} kr)` 
+                        : "";
+                    return `[${this.flag_type}] ${this.description}${targetStr}`;
+                }
+            }
+
+
+            class ProScreeningTool {
+                constructor(data) {
+                    this.data = data;
+                    this.flags = [];
+                    this.suggestions = [];
+                    
+                    // Beregner total inntekt og gjeld
+                    this.total_inntekt = this.data.sokere.reduce((sum, s) => sum + s.inntekt, 0);
+                    this.total_gjeld_uten_laan = (
+                        this.data.studielån + 
+                        this.data.forbrukslån + 
+                        this.data.kredittkort_ramme + 
+                        this.data.bil_laan
+                    );
+                    this.total_gjeld_med_laan = this.total_gjeld_uten_laan + this.data.laan_oensket;
+                }
+
+                check_gjeld_ratio() {
+                    // Sjekker gjeldsgrad mot 5x inntekt
+                    if (this.total_inntekt === 0) {
+                        this.flags.push("Feil: Total inntekt er null, kan ikke beregne gjeldsgrad.");
+                        return;
+                    }
+
+                    const ratio = this.total_gjeld_med_laan / this.total_inntekt;
+                    
+                    if (ratio > MAX_GJELD_RATIO) {
+                        this.flags.push(`Alvorlig: For høy gjeldsgrad (${ratio.toFixed(2)}x) – over ${MAX_GJELD_RATIO.toFixed(1)}x inntekt.`);
+                        const max_gjeld = MAX_GJELD_RATIO * this.total_inntekt;
+                        const reduction_needed = this.total_gjeld_med_laan - max_gjeld;
+                        
+                        this.suggestions.push(new SolutionSuggestion(
+                            "Gjeldsgrad",
+                            `Reduser total gjeld (inkl. nytt lån) med ${formatNorskKr(reduction_needed)} kr, eller øk inntekten.`,
+                            max_gjeld
+                        ));
+                    }
+                }
+                
+                check_ltv() {
+                    // Sjekker LTV mot 85% grensen
+                    const value = this.data.bolig_verdi;
+                    const loan = this.data.laan_oensket;
+                    
+                    if (value > 0) {
+                        const ltv = loan / value;
+                        if (ltv > MAX_LTV) {
+                            const ltv_pct = ltv * 100;
+                            this.flags.push(`Alvorlig: LTV over ${MAX_LTV*100}% (${ltv_pct.toFixed(2)}%) – krever ekstra egenkapital eller spesialistbank.`);
+                            
+                            const max_loan_allowed = MAX_LTV * value;
+                            const equity_needed = loan - max_loan_allowed;
+                            
+                            this.suggestions.push(new SolutionSuggestion(
+                                "LTV",
+                                `Kunden må stille med ekstra egenkapital på ${formatNorskKr(equity_needed)} kr for ordinær bankfinansiering (85% krav).`,
+                                max_loan_allowed
+                            ));
+                        }
+                    }
+                }
+
+                check_betjeningsevne() {
+                    // Sjekker Betjeningsevne med SIFO og Stresstest
+                    let husholdning = this.data.barn_under_18 + this.data.sokere.length;
+                    husholdning = Math.min(husholdning, 5); // Maks 5 for SIFO simulering
+                    
+                    let standard_sifo_cost = SIFO_AARLIG[husholdning] || 
+                                             (SIFO_AARLIG[5] + ((husholdning - 5) * 50000));
+                    
+                    const stressed_annual_interest_increase = this.total_gjeld_med_laan * RENTE_OEKNING_STRESS_TEST;
+                    
+                    const total_annual_expenses_stressed = standard_sifo_cost + stressed_annual_interest_increase;
+                    const solvency_margin = this.total_inntekt - total_annual_expenses_stressed;
+                    
+                    if (solvency_margin < MIN_LIVSOPPHOLD_MARGIN) {
+                        this.flags.push(`Betjeningsevne: Lav margin (${formatNorskKr(solvency_margin)} kr/år) etter stresstest. Under min. krav.`);
+                        const shortfall = MIN_LIVSOPPHOLD_MARGIN - solvency_margin;
+
+                        this.suggestions.push(new SolutionSuggestion(
+                            "Betjeningsevne",
+                            `Må øke årlig margin med ${formatNorskKr(shortfall)} kr (før skatt). Reduser gjeld eller øk inntekt.`,
+                            MIN_LIVSOPPHOLD_MARGIN
+                        ));
+                    }
+                }
+
+                check_usikker_gjeld_og_kilder() {
+                    // Sjekker usikker gjeld og egenkapital kilde
+                    const forbrukslån = this.data.forbrukslån;
+                    const kredittkort_ramme = this.data.kredittkort_ramme;
+                    
+                    if (kredittkort_ramme > 100000) {
+                        this.flags.push(`Gjeld: Høy ubrukt kredittramme (${formatNorskKr(kredittkort_ramme)} kr) reduserer lånekapasitet.`);
+                    }
+                        
+                    if (forbrukslån > FORBRUKSLÅN_CAP) {
+                        this.flags.push(`Gjeld: Ekstremt høyt forbrukslån (${formatNorskKr(forbrukslån)} kr). Krever refinansiering.`);
+                    }
+                    
+                    const kilde = this.data.egenkapital_kilde.toLowerCase();
+                    if (kilde.includes("lån") || kilde.includes("foreldre") || kilde.includes("venn")) {
+                        this.flags.push(`Egenkapital: Kilde ('${this.data.egenkapital_kilde}') er usikker og krever sterk dokumentasjon.`);
+                        this.suggestions.push(new SolutionSuggestion("Egenkapital", "Dokumenter kilden til egenkapital tydelig for å unngå avslag."));
+                    }
+                }
+
+                bank_comparison() {
+                    // Simulerer sannsynlighet for innvilgelse per bank
+                    const chances = [];
+                    
+                    for (const bank_navn in BANK_POLICIES) {
+                        const policy = BANK_POLICIES[bank_navn];
+                        let current_chance = policy.base_chance;
+                        
+                        // 1. Gjeldsgrad sjekk
+                        const ratio = this.total_inntekt > 0 ? this.total_gjeld_med_laan / this.total_inntekt : 99;
+                        if (ratio > policy.gjeld_max) {
+                            current_chance -= 30; 
+                        } else if (ratio > MAX_GJELD_RATIO) {
+                            current_chance -= 15; 
+                        }
+
+                        // 2. LTV sjekk
+                        const value = this.data.bolig_verdi || 1;
+                        const ltv = this.data.laan_oensket / value;
+                        if (ltv > policy.ltv_max) {
+                            current_chance -= 20;
+                        }
+                        
+                        // 3. Sysselsetting sjekk (Hovedsøker)
+                        const hoved_sysselsetting = this.data.sokere[0].sysselsetting;
+                        if (!policy.sysselsetting_krav.includes(hoved_sysselsetting)) {
+                            current_chance -= 25;
+                        }
+                            
+                        // 4. Forbrukslån sjekk
+                        if (this.data.forbrukslån > policy.forbrukslan_toleranse) {
+                            current_chance -= 15;
+                        }
+                        
+                        // 5. Tidligere søkt
+                        for (const bank_sokt of this.data.bank_sokt) {
+                            if (bank_sokt.toUpperCase().includes(bank_navn.split('(')[0].trim().toUpperCase())) {
+                                current_chance -= 10; 
+                            }
+                        }
+
+                        chances.push({
+                            navn: bank_navn, 
+                            chance: Math.max(0, Math.min(100, current_chance))
+                        });
+                    }
+
+                    // Sorter etter sjanse, høyest først
+                    return chances.sort((a, b) => b.chance - a.chance);
+                }
+
+                evaluate() {
+                    // Kjør alle sjekker
+                    this.flags = [];
+                    this.suggestions = [];
+                    
+                    this.check_gjeld_ratio();
+                    this.check_ltv();
+                    this.check_betjeningsevne();
+                    this.check_usikker_gjeld_og_kilder();
+                    
+                    const bank_results = this.bank_comparison();
+
+                    return {
+                        risk_flags: this.flags,
+                        løsningsforslag: this.suggestions.map(s => s.toString()),
+                        bank_chances: bank_results
+                    };
+                }
+            }
+
+
+            // Hoved logikk for skjema innsending (Form submission handler)
+            document.getElementById('evaluation-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const form = e.target;
+                const isMedsoker = form.medsoker_ja_nei.value === 'Ja';
+
+                // Vis spinner/loading
+                const resultsDiv = document.getElementById('results');
+                const loadingSpinner = document.getElementById('loading-spinner');
+                const analysisContent = document.getElementById('analysis-content');
+
+                resultsDiv.style.display = 'block';
+                analysisContent.style.display = 'none';
+                loadingSpinner.style.display = 'block';
+
+                // Simulerer forsinkelse for UI feedback (0.5 sekunder)
+                setTimeout(() => {
+                    // 1. Samle og konverter data fra skjema
+                    const data = {
+                        kunde_ID: form.kunde_ID.value,
+                        laanetype_ønsket: form.laanetype_ønsket.value,
+                        laan_oensket: parseFloat(form.laan_oensket.value) || 0,
+                        bolig_verdi: parseFloat(form.bolig_verdi.value) || 0,
+                        egenkapital: parseFloat(form.egenkapital.value) || 0,
+                        egenkapital_kilde: form.egenkapital_kilde.value.trim(),
+                        
+                        studielån: parseFloat(form.studielån.value) || 0,
+                        forbrukslån: parseFloat(form.forbrukslån.value) || 0,
+                        kredittkort_ramme: parseFloat(form.kredittkort_ramme.value) || 0, 
+                        bil_laan: parseFloat(form.bil_laan.value) || 0,
+                        // Splitter og trimmer bankene søkt hos
+                        bank_sokt: form.bank_sokt.value.split(',').map(b => b.trim()).filter(b => b.length > 0),
+
+                        sokere: [
+                            {
+                                rolle: 'Hovedsøker',
+                                inntekt: parseFloat(form.inntekt_hoved.value) || 0,
+                                sysselsetting: form.sysselsetting_hoved.value,
+                            }
+                        ],
+                        barn_under_18: parseInt(form.barn_under_18.value) || 0,
+                    };
+
+                    if (isMedsoker) {
+                        data.sokere.push({
+                            rolle: 'Medsøker',
+                            inntekt: parseFloat(form.inntekt_medsoker.value) || 0,
+                            sysselsetting: form.sysselsetting_medsoker.value,
+                        });
+                    }
+
+                    // 2. Kjør analyse
+                    const evaluator = new ProScreeningTool(data);
+                    const results = evaluator.evaluate();
+                    
+                    // 3. Oppdater UI med resultater
+                    loadingSpinner.style.display = 'none';
+                    analysisContent.style.display = 'block';
+
+                    const flagsDiv = document.getElementById('risk-flags');
+                    const suggestionsList = document.getElementById('suggestions-list');
+                    const bankChancesDiv = document.getElementById('bank-chances');
+                    
+                    // Risiko Flagg (med Dark Red farge og 1.02rem font-size)
+                    flagsDiv.innerHTML = results.risk_flags.length > 0 
+                        ? results.risk_flags.map(flag => `<p>• ${flag}</p>`).join('')
+                        : '<p style="color: green; font-weight: 600; font-size: 1rem;">Ingen alvorlige risikoflagg funnet. Dette er et sterkt utgangspunkt.</p>';
+
+                    // Løsningsforslag
+                    suggestionsList.innerHTML = results.løsningsforslag.length > 0
+                        ? results.løsningsforslag.map(suggestion => `<li>${suggestion}</li>`).join('')
+                        : '<li>Dette er et sterkt case. Ingen umiddelbare forbedringsforslag er nødvendig.</li>';
+
+                    // Bank Match
+                    bankChancesDiv.innerHTML = `<div class="bank-match-container">
+                        ${results.bank_chances.map(bank => `
+                            <div class="bank-card ${bank.chance > 60 ? 'high-chance' : ''}">
+                                <h4>${bank.navn}</h4>
+                                <p>${bank.chance}%</p>
+                            </div>
+                        `).join('')}
+                    </div>`;
+
+                }, 500); 
+            });
+        });
+    </script>
 </body>
 </html>
